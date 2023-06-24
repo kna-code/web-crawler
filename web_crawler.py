@@ -12,25 +12,24 @@ from datetime import datetime
 import os
 import re
 import logging
+import re
 
 class KeyWordSpider(scrapy.Spider):
-    name = "abortion_search"
-    keyword = "abortion"
+    name = "KeyWordSpider"
     inputFile = "./data/schools.csv"
     outputDir = "./output/"
-    outputFileReport = None
     outputFileLog = None
+    outputFileReport = None
 
     def start_requests(self):
 
-        # Configure Output Path
+        # (1) Initiaize the Output Files
+
         if not os.path.exists(self.outputDir):
             os.makedirs(self.outputDir)     
 
-        self.outputFileReport = "./output/report_" +  datetime.now().strftime("%Y%m%d%H%M%S") + ".csv"
+        # Logging
         self.outputFileLog = "./output/report_" +  datetime.now().strftime("%Y%m%d%H%M%S") + ".log"
-
-        # Configure logging
         logging.basicConfig(filename=self.outputFileLog, 
                             filemode='a',
                             format="%(levelname)s: %(message)s", 
@@ -38,58 +37,78 @@ class KeyWordSpider(scrapy.Spider):
                             force=True
         )
 
+        # Report
+        self.outputFileReport = "./output/report_" +  datetime.now().strftime("%Y%m%d%H%M%S") + ".csv"
+        logging.info(f"Output File Report:{self.outputFileReport}")
+
+        file = open(self.outputFileReport, "w")
+        try:
+            file.write(f'School,Keyword,URL\n')
+        finally:
+            file.close()
+        
+
+        # (2) Load the Input Files
+
         # Parse Input
         if not os.path.isfile(self.inputFile):
             logging.error(f'Input File Not Found: {self.inputFile}')
 
-
-        logging.info(f"Output File Report:{self.outputFileReport}")
-
+        expectedFormat="School,Domain,Starting URL,Keyword1,Keyword2,Keyword3,..."
         with open(self.inputFile , newline='\n') as csvfile:
             inputFileReader = csv.reader(csvfile, delimiter=',', quotechar='"')
-            next(inputFileReader) # skip the header
+            next(inputFileReader) # skip the header            
+            line = 1
             for row in inputFileReader:
-                if(len(row) == 3):
-                    school = row[0]
-                    domain = row[1]
+                line = line+1
+                if(len(row) >=4):
+                    school = row[0].strip()
+                    domain = row[1].strip()
                     startingUrl = row[2]
+                    keywords = []
+                    for i in range(3, len(row)):
+                        # sanitize the input.
+                        word = row[i].strip().lower();
+                        if(len(word) > 0 ):
+                            keywords.append(word)
 
-                    print(', '.join(row))
-                    request = scrapy.Request(url=startingUrl, callback=self.parse)
-                    request.cb_kwargs['school'] = school
-                    request.cb_kwargs['domain'] = domain
-                    yield request
+                    if(len(school) > 0 and len (domain) > 0 and len(startingUrl) > 0 and len(keywords) > 0):
+                        request = self.createCrawlRequest(startingUrl, school, domain, keywords)
+                        yield request
+                    else:
+                        logging.error(f'Invalid Row on line {line}: "{",".join(row)}", expected format is "{expectedFormat}"')
                 else:
-                    logging.error("Invalid Row: " + ', '.join(row))
+                    logging.error(f'Invalid Row on line {line}: "{",".join(row)}", expected format is "{expectedFormat}"')
+
+    def createCrawlRequest(self, url, school, domain, keywords):
+        request = scrapy.Request(url=url, callback=self.parse)
+        request.cb_kwargs['school'] = school
+        request.cb_kwargs['domain'] = domain
+        request.cb_kwargs['keywords'] = keywords
+        return request
+        
 
 
-    def parse(self, response, school, domain):
+    def parse(self, response, school, domain, keywords):
 
-        logging.info(f'Parsing {response.url}')
+        logging.info(f'Parsing Domain="{domain}", School="{school}", URL="{response.url}", Keywords="{",".join(keywords)}"')
         
         # Log the keywords on this page
-        file = open(self.outputFileReport, "w")
+        file = open(self.outputFileReport, "a")
         try:
-            searchResults = response.xpath("//*[contains(text(), '{keyword}')]").getall()
-            for searchResult in searchResults:
-                url = response.url
-                text = searchResult
-
-                file.write('"{label}","{url}","{text}"')
+            # Look for the keyword
+            for keyword in keywords:
+                if( response.text.find(keyword) >= 0):
+                    file.write(f'{school},{keyword},{response.url}\n')
         finally:
             file.close()
 
-        # Look for links to follow
-        links = response.xpath('//div/p/a')
-        numLinks = len(links)
-        logging.info(f'LINKS: {numLinks}')
-        for link in links:
-            if re.search(rootUrl, link, re.IGNORECASE):
-                    request2 = scrapy.Request(url=url, callback=self.parse)
-                    request2.cb_kwargs['school'] = school
-                    request2.cb_kwargs['domain'] = domain
-                    yield request2
-
+        # Look for links
+        linkRegExPattern = re.compile('<a href="(\S*)">')        
+        for (url) in re.findall(linkRegExPattern, response.text):
+            logging.info(f'LINK: {url}')
+            request = self.createCrawlRequest(url, school, domain, keywords)
+            yield request
 
 
 def main():

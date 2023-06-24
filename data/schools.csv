@@ -1,3 +1,3 @@
-School,Domain,Starting URL
-Boston University,www.bu.edu/, https://www.bu.edu/sph/about/directory/
-Emory, sph.emory.edu, https://sph.emory.edu/faculty/?dept=gh
+School,Domain,Starting URL,Keyword1,Keyword2,Keyword3,...
+Boston University,bu.edu,https://www.bu.edu/sph/about/directory/,abortion,Mifepristone
+Emory,emory.edu,https://sph.emory.edu/faculty/?dept=gh,,abortion,
