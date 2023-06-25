@@ -6,7 +6,7 @@ class SearchRequest:
     domains: List[str]
     start_url: str
     keywords: List[str]
-    excerpt_length = 20
+    excerpt_length = 100
 
     def __init__(self, name, domains, start_url, keywords):
         self.name = name

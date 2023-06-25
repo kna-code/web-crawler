@@ -16,6 +16,6 @@ class SearchResult:
 
     def __init__(self, name, keyword, url, excerpts):
         self.name = name
-        self.keyword = url
+        self.keyword = keyword
         self.url = url
         self.excerpts = excerpts

@@ -6,12 +6,15 @@ import re
 class SearchUtils():
     @staticmethod
     def search_keywords(search_request: SearchRequest, url: str, contents: str):      
-        excerpts = []
+       
+        results = []
 
         contents_lower = contents.lower()
         startIdx = 0
 
         for keyword in search_request.keywords:
+                excerpts = []
+
                 #print(f'looking for keyword {keyword} in {contents_lower}')
                 match = re.search(keyword, contents_lower)
                 while match:
@@ -28,11 +31,14 @@ class SearchUtils():
                     startIdx = startIdx + match.start() + 1
                     match = re.search(keyword, contents_lower[startIdx:])
         
-        if len(excerpts) > 0:
-            return SearchResult(search_request.name,
-                            keyword,
-                            url,
-                            excerpts)
+                if len(excerpts) > 0:
+                    result = SearchResult(search_request.name,
+                                keyword,
+                                url,
+                                excerpts)
+                    results.append(result)
+
+        return results
 
 
     @staticmethod

@@ -13,6 +13,7 @@ import httplib2
 from datetime import datetime
 import os
 import logging
+import re
 
 class WebCrawler:
     search_request: SearchRequest
@@ -22,7 +23,7 @@ class WebCrawler:
     output_report_summary_file: str
 
     workerCount = 7
-    statusFrequencySeconds = 1
+    statusFrequencySeconds = 10
     workers = []
     search_queue = WebCrawlerQueue()
     result_queue = SearchResultQueue()
@@ -35,14 +36,15 @@ class WebCrawler:
     def run(self):
 
         startTime = time.perf_counter()
-        print(f'{self.search_request.name} - Starting)')
+        print(f'{self.search_request.name} - Starting')
 
         self.initialize_result_files()
         self.search_queue.enqueue(self.search_request.start_url)
 
 
-        lastStatusUpdateTime = 0
-        
+        lastStatusUpdateTime = time.perf_counter()
+        print(f'{self.search_request.name}: Matching Urls: {self.result_count}, Queue Size: {self.search_queue.size()}')
+
         self.start_workers()
         while self.any_worker_active() or (not self.search_queue.empty()) or (not self.result_queue.empty()):
             # Print the status Size periodially
@@ -134,14 +136,15 @@ class WebCrawler:
         try:
             #file.write(f'Name, Keyword, URL, Location, Excerpt\n')
             for excerpt in result.excerpts:
-                file.write(f'{result.name},{result.keyword},{result.url},{excerpt.location},"{excerpt.text}"')
+                escaped_text = re.escape(excerpt.text)
+                file.write(f'{result.name},{result.keyword},{result.url},{excerpt.location},"{escaped_text}\n"')
         finally:
             file.close()
 
         # Report - Summary
         file = open(self.output_report_summary_file, "a")
         try:
-            file.write(f'{result.name},{result.keyword},{result.url},{len(result.excerpts)}')
+            file.write(f'{result.name},{result.keyword},{result.url},{len(result.excerpts)}\n')
         finally:
             file.close()
         

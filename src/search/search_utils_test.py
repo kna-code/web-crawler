@@ -20,8 +20,10 @@ class SearchUtilsTests(unittest.TestCase):
         str_contents = contents.decode('utf-8')
 
         print(f'TYPE {type(str_contents)}')
-        result = SearchUtils.search_keywords(searchRequest, url, str_contents)
-        self.assertTrue(result)
+        results = SearchUtils.search_keywords(searchRequest, url, str_contents)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].keyword, "abortion")
+        self.assertEqual(results[0].url, url)
 
     def test_parse_keyword_not_found(self):
 

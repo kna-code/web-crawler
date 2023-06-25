@@ -4,7 +4,7 @@ from search.web_crawler import WebCrawler
 def main():
 
     searchRequest = SearchRequest("Boston University Faculty", 
-                                   ["bu.edu"], 
+                                   ["www.bu.edu/sph"], 
                                    "https://www.bu.edu/sph/about/directory/", 
                                    ["abortion"])
 
