@@ -39,13 +39,12 @@ class SearchUtils():
     def search_links(search_request: SearchRequest, url: str, contents: str):        
         links = []
         linkRegExPattern = re.compile('<a href="(\S*)">')        
-        for (url) in re.findall(linkRegExPattern, contents):
-            for domain in search_request.domains: 
-                isDomainMatch = len(re.findall(domain, url, flags=re.IGNORECASE)) > 0
-                logging.info(f'LINK: {url}, isDomain={isDomainMatch}')
-
-                if isDomainMatch:
+        for url in re.findall(linkRegExPattern, contents):
+            for domain in search_request.domains:                
+                match = re.search(domain, url)
+                if match:
                     links.append(url)
+                
 
-        return links;
+        return links
         
