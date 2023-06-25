@@ -29,6 +29,8 @@ class WebCrawler:
     result_queue = SearchResultQueue()
     result_count = 0
 
+    lastStatusUpdateTime = 0
+
     def __init__(self, search_request: SearchRequest, output_dir: str):
         self.search_request = search_request
         self.output_dir = output_dir
@@ -41,17 +43,11 @@ class WebCrawler:
         self.initialize_result_files()
         self.search_queue.enqueue(self.search_request.start_url)
 
-
-        lastStatusUpdateTime = time.perf_counter()
-        print(f'{self.search_request.name}: Matching Urls: {self.result_count}, Queue Size: {self.search_queue.size()}')
-
+        self.log_progress()
         self.start_workers()
         while self.any_worker_active() or (not self.search_queue.empty()) or (not self.result_queue.empty()):
-            # Print the status Size periodially
-            currentTime = time.perf_counter()
-            if currentTime - lastStatusUpdateTime > self.statusFrequencySeconds:
-                lastStatusUpdateTime = currentTime
-                print(f'{self.search_request.name}: Matching Urls: {self.result_count}, Queue Size: {self.search_queue.size()}')
+
+            self.log_progress()
 
             # Process the results queue
             result = self.result_queue.dequeue()
@@ -61,6 +57,7 @@ class WebCrawler:
                 time.sleep(1)
 
         self.stop_workers()
+        self.log_progress()
 
         endTime = time.perf_counter()
         
@@ -73,6 +70,14 @@ class WebCrawler:
         timeLog = f'{self.search_request.name} - Completed in {hours} hours, {minutes}, {totalSeconds - seconds}'
         logging.info(timeLog)
         print(timeLog)
+
+    def log_progress(self):
+        # Log based on the interval
+        currentTime = time.perf_counter()
+        if currentTime - self.lastStatusUpdateTime > self.statusFrequencySeconds:
+            self.lastStatusUpdateTime = currentTime
+            print(f'{self.search_request.name}: Matches Found: {self.result_count}, Queue Size: {self.search_queue.size()}, Active Worker Threads: {self.active_worker_count()}')
+    
 
     def start_workers(self):
         for i in range(0, self.workerCount):
@@ -92,17 +97,29 @@ class WebCrawler:
                 return True
         return False
     
+    def active_worker_count(self):
+        count = 0
+        for worker in self.workers:
+            if worker.active():
+                count = count + 1
+       
+        return count
+    
     def initialize_result_files(self):
 
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        dir = self.output_dir + "/" + timestamp
-
         # Ensure the output directory exists
-        if not os.path.exists(dir):
-            os.makedirs(dir)     
+        if not os.path.exists(self.output_dir):
+            os.makedirs(self.output_dir)     
+
+        if self.search_request.debug_output_enabled and not os.path.exists(self.search_request.debug_output_dir):
+            os.makedirs(self.search_request.debug_output_dir)  
+
+        # Create the file name
+        search_name = self.search_request.name.lower()
+        search_name = search_name.replace(" ", "_")
 
         # Logging
-        self.output_log_file = f'{dir}/log_{timestamp}.txt'
+        self.output_log_file = f'{self.output_dir}/{search_name}_log.txt'
         logging.basicConfig(filename=self.output_log_file, 
                             filemode='a',
                             format="%(levelname)s: %(message)s", 
@@ -111,7 +128,7 @@ class WebCrawler:
         )
 
         # Report - Detailed
-        self.output_report_detailed_file = f'{dir}/report_detailed_{timestamp}.csv'
+        self.output_report_detailed_file = f'{self.output_dir}/{search_name}_report_detailed.csv'
         logging.info(f"Output File Report Detailed: {self.output_report_detailed_file}")
         file = open(self.output_report_detailed_file, "w")
         try:
@@ -120,7 +137,7 @@ class WebCrawler:
             file.close()
 
         # Report - Detailed
-        self.output_report_summary_file = f'{dir}/report_summary_{timestamp}.csv'
+        self.output_report_summary_file = f'{self.output_dir}/{search_name}_report_summary.csv'
         logging.info(f"Output File Report Summary: {self.output_report_summary_file}")
         file = open(self.output_report_summary_file, "w")
         try:
@@ -150,3 +167,4 @@ class WebCrawler:
         
 
         self.result_count = self.result_count + 1
+

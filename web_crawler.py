@@ -13,6 +13,7 @@ import os
 import re
 import logging
 import re
+import time
 
 class KeyWordSpider(scrapy.Spider):
     name = "KeyWordSpider"
@@ -98,7 +99,8 @@ class KeyWordSpider(scrapy.Spider):
         try:
             # Look for the keyword
             for keyword in keywords:
-                if( response.text.find(keyword) >= 0):
+                keywordMatches = re.findall(keyword, response.text, flags=re.IGNORECASE)
+                if( len(keywordMatches) > 0):
                     file.write(f'{school},{keyword},{response.url}\n')
         finally:
             file.close()
@@ -106,13 +108,17 @@ class KeyWordSpider(scrapy.Spider):
         # Look for links
         linkRegExPattern = re.compile('<a href="(\S*)">')        
         for (url) in re.findall(linkRegExPattern, response.text):
-            logging.info(f'LINK: {url}')
-            request = self.createCrawlRequest(url, school, domain, keywords)
-            yield request
+            isDomainMatch = len(re.findall(domain, url, flags=re.IGNORECASE)) > 0
+            logging.info(f'LINK: {url}, isDomain={isDomainMatch}')
+
+            if isDomainMatch:
+                request = self.createCrawlRequest(url, school, domain, keywords)
+                yield request
 
 
 def main():
 
+    startTime = time.perf_counter()
 
     # Start the Crawler
     settings = {
@@ -121,6 +127,19 @@ def main():
     process = CrawlerProcess(settings)
     process.crawl(KeyWordSpider)
     process.start()
+
+    endTime = time.perf_counter()
+
+
+    # Pretty-print the time.
+    totalSeconds = endTime-startTime
+    hours = totalSeconds%(60*60)
+    minutes = totalSeconds%(60*60)
+    seconds = totalSeconds - hours*60*60 - minutes*60
+
+    timeLog = f'Completed in {hours} hours, {minutes}, {totalSeconds - seconds}'
+    logging.info(timeLog)
+    print(timeLog)
 
 if __name__ == "__main__":
     main()

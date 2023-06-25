@@ -10,6 +10,7 @@ import threading
 import time
 import httplib2
 import logging
+import os
 
 class WebCrawlerWorker:
     status = Enum('WebCrawelerWorkerStatus', ['None', 'Processing', 'Waiting', 'Stopping'])
@@ -70,10 +71,13 @@ class WebCrawlerWorker:
             resp, contents = httplib2.Http().request(url)
             str_contents = contents.decode('utf-8')
 
+            if self.search_request.debug_output_enabled:
+                self.save_debug_files(url, str_contents)
+
             # Handle any results
-            result = SearchUtils.search_keywords(self.search_request, url, str_contents)
-            logging.info(f'WebCrawlerWorker[{self.id}]: Processing {url}, Match={result is not None}')
-            if result:
+            results = SearchUtils.search_keywords(self.search_request, url, str_contents)
+            logging.info(f'WebCrawlerWorker[{self.id}]: Processing {url}, Match={len(results)>0}')
+            for result in results:
                 self.result_queue.enqueue(result)
 
             # Handle any links
@@ -85,3 +89,22 @@ class WebCrawlerWorker:
         except Exception as Argument:
             logging.exception(f'WebCrawlerWorker[{self.id}]: Processing {url}, Exception{Argument}')
    
+
+    def save_debug_files(self, url: str, contents : str):
+
+        urls_dir = f'{self.search_request.debug_output_dir}/urls'
+        if not os.path.exists(urls_dir):
+            os.makedirs(urls_dir)  
+
+
+        invalid_chars = ["#", "/", "\"", "+", "$", "?", "@" ]
+        filename = url
+        for c in invalid_chars:
+            filename = filename.replace(c, "-")
+        filePath = f'{urls_dir}/{filename}.txt'
+
+        file = open(filePath, "w")
+        try:
+            file.write(contents)
+        finally:
+            file.close()
