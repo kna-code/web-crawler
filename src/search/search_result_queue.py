@@ -10,12 +10,12 @@ class SearchResultQueue:
     def enqueue(self, search_result: SearchResult):
 
         with self.lock:
-            queue.put(search_result)
+            self.queue.put(search_result)
 
     def dequeue(self):
         with self.lock:
             try:
-                return self.queue.get()
+                return self.queue.get(False, 0.1)
             except:
                 return None;
 

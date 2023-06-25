@@ -10,7 +10,9 @@ import queue
 import threading
 import time
 import httplib2
-import datetime
+from datetime import datetime
+import os
+import logging
 
 class WebCrawler:
     search_request: SearchRequest
@@ -20,7 +22,7 @@ class WebCrawler:
     output_report_summary_file: str
 
     workerCount = 7
-    statusFrequencySeconds = 10
+    statusFrequencySeconds = 1
     workers = []
     search_queue = WebCrawlerQueue()
     result_queue = SearchResultQueue()
@@ -32,14 +34,17 @@ class WebCrawler:
 
     def run(self):
 
+        startTime = time.perf_counter()
+        print(f'{self.search_request.name} - Starting)')
+
+        self.initialize_result_files()
         self.search_queue.enqueue(self.search_request.start_url)
 
+
+        lastStatusUpdateTime = 0
+        
         self.start_workers()
-
-        lastStatusUpdateTime = time.perf_counter()
-
-        while self.any_worker_active() or not self.search_queue.empty() or not self.result_queue.empty():
-
+        while self.any_worker_active() or (not self.search_queue.empty()) or (not self.result_queue.empty()):
             # Print the status Size periodially
             currentTime = time.perf_counter()
             if currentTime - lastStatusUpdateTime > self.statusFrequencySeconds:
@@ -55,11 +60,21 @@ class WebCrawler:
 
         self.stop_workers()
 
+        endTime = time.perf_counter()
+        
+        # Pretty-print the time.
+        totalSeconds = endTime-startTime
+        hours = totalSeconds%(60*60)
+        minutes = totalSeconds%(60*60)
+        seconds = totalSeconds - hours*60*60 - minutes*60
+
+        timeLog = f'{self.search_request.name} - Completed in {hours} hours, {minutes}, {totalSeconds - seconds}'
+        logging.info(timeLog)
+        print(timeLog)
 
     def start_workers(self):
         for i in range(0, self.workerCount):
             worker = WebCrawlerWorker(i+1, self.search_request, self.search_queue, self.result_queue)
-            print(f'worker type = {type(worker)}')
             worker.start_thread()
             self.workers.append(worker)
         
@@ -81,12 +96,12 @@ class WebCrawler:
         dir = self.output_dir + "/" + timestamp
 
         # Ensure the output directory exists
-        if not os.path.exists(self.dir):
-            os.makedirs(self.dir)     
+        if not os.path.exists(dir):
+            os.makedirs(dir)     
 
         # Logging
         self.output_log_file = f'{dir}/log_{timestamp}.txt'
-        logging.basicConfig(filename=self.outputFileLog, 
+        logging.basicConfig(filename=self.output_log_file, 
                             filemode='a',
                             format="%(levelname)s: %(message)s", 
                             level=logging.DEBUG,
@@ -94,7 +109,7 @@ class WebCrawler:
         )
 
         # Report - Detailed
-        self.output_report_detailed_file = f'{dir}/report_detailed_{timestamp}.txt'
+        self.output_report_detailed_file = f'{dir}/report_detailed_{timestamp}.csv'
         logging.info(f"Output File Report Detailed: {self.output_report_detailed_file}")
         file = open(self.output_report_detailed_file, "w")
         try:
@@ -103,7 +118,7 @@ class WebCrawler:
             file.close()
 
         # Report - Detailed
-        self.output_report_summary_file = f'{dir}/report_detailed_{timestamp}.txt'
+        self.output_report_summary_file = f'{dir}/report_summary_{timestamp}.csv'
         logging.info(f"Output File Report Summary: {self.output_report_summary_file}")
         file = open(self.output_report_summary_file, "w")
         try:
@@ -119,14 +134,14 @@ class WebCrawler:
         try:
             #file.write(f'Name, Keyword, URL, Location, Excerpt\n')
             for excerpt in result.excerpts:
-                file.write(result.name, result.keyword, result.url, excerpt.location, excerpt.exceprt)
+                file.write(f'{result.name},{result.keyword},{result.url},{excerpt.location},"{excerpt.text}"')
         finally:
             file.close()
 
         # Report - Summary
         file = open(self.output_report_summary_file, "a")
         try:
-            file.write(result.name, result.keyword, result.url, len(result.excerpts))
+            file.write(f'{result.name},{result.keyword},{result.url},{len(result.excerpts)}')
         finally:
             file.close()
         

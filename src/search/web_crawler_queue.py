@@ -17,12 +17,12 @@ class WebCrawlerQueue:
     def dequeue(self):
         with self.lock:
             try:
-                return self.queue.get()
+                return self.queue.get(False, 0.1)
             except:
                 return None
 
     def size(self):
-        return self.queue.size()
+        return self.queue.qsize()
     
     def empty(self):
         return self.queue.empty()

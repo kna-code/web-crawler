@@ -18,4 +18,4 @@ class SearchResult:
         self.name = name
         self.keyword = url
         self.url = url
-        self.excerpts = text
+        self.excerpts = excerpts
