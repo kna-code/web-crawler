@@ -2,11 +2,11 @@ from typing import List
 
 class SearchResultExcerpt:
     location: int
-    exceprt: str
+    text: str
 
-    def __init__(self, location, excerpt):
+    def __init__(self, location, text):
         self.location = location
-        self.excerpt = excerpt
+        self.text = text
 
 class SearchResult:
     name: str
@@ -18,4 +18,4 @@ class SearchResult:
         self.name = name
         self.keyword = url
         self.url = url
-        self.excerpts = excerpts
+        self.excerpts = text

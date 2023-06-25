@@ -36,7 +36,7 @@ class SearchUtils():
 
 
     @staticmethod
-    def search_links(search_request: SearchRequest, url: str, contents: str):        
+    def search_links(search_request: SearchRequest, contents: str):        
         links = []
         linkRegExPattern = re.compile('<a href="(\S*)">')        
         for url in re.findall(linkRegExPattern, contents):
@@ -45,6 +45,5 @@ class SearchUtils():
                 if match:
                     links.append(url)
                 
-
         return links
         

@@ -42,7 +42,7 @@ class SearchUtilsTests(unittest.TestCase):
         resp, contents = httplib2.Http().request(url)
         str_contents = contents.decode('utf-8')
 
-        result = SearchUtils.search_links(searchRequest, url, str_contents)
+        result = SearchUtils.search_links(searchRequest, str_contents)
         self.assertGreater(len(result), 1)
 
 if __name__ == '__main__':
