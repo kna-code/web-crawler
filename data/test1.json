@@ -3,7 +3,7 @@
         {
             "name": "Emory University Faculty",
             "start_url": "https://sph.emory.edu/faculty/?dept=gh",
-            "domains": ["sph.emory.edu"],
+            "domains": ["sph.emory.edu/faculty"],
             "keywords": ["abortion"]
         }
     ]

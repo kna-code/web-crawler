@@ -1,8 +1,8 @@
 # To run all tests: 
-# > python3 -m unittest tests.search.test_search_utils 
+# > python3 -m unittest tests.search.test_search_util 
 #
 # To run a single test:
-# > python3 -m unittest tests.search.test_search_utils.SearchUtilsTests.test_parse_keyword_found 
+# > python3 -m unittest tests.search.test_search_util.SearchUtilTests.test_parse_keyword_found 
 
 import unittest
 from src.search.search_request import SearchRequest 
@@ -10,7 +10,7 @@ from src.search.search_result import SearchResult
 from src.search.search_utils import SearchUtils
 import httplib2
 
-class SearchUtilsTests(unittest.TestCase):
+class SearchUtilTests(unittest.TestCase):
     def test_parse_keyword_found(self):
 
         searchRequest = SearchRequest("Test", "", "", ["abortion"])

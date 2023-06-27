@@ -14,6 +14,7 @@ from datetime import datetime
 import os
 import logging
 import re
+from util import time_util
 
 class WebCrawler:
     search_request: SearchRequest
@@ -29,6 +30,7 @@ class WebCrawler:
     result_queue = SearchResultQueue()
     result_count = 0
 
+    startTime = 0
     lastStatusUpdateTime = 0
 
     def __init__(self, search_request: SearchRequest, output_dir: str):
@@ -37,7 +39,7 @@ class WebCrawler:
 
     def run(self):
 
-        startTime = time.perf_counter()
+        self.startTime = time.perf_counter()
         print(f'{self.search_request.name} - Starting')
 
         self.initialize_result_files()
@@ -59,25 +61,15 @@ class WebCrawler:
         self.stop_workers()
         self.log_progress()
 
-        endTime = time.perf_counter()
-        
-        # Pretty-print the time.
-        totalSeconds = endTime-startTime
-        hours = totalSeconds%(60*60)
-        minutes = totalSeconds%(60*60)
-        seconds = totalSeconds - hours*60*60 - minutes*60
-
-        timeLog = f'{self.search_request.name} - Completed in {hours} hours, {minutes}, {totalSeconds - seconds}'
-        logging.info(timeLog)
-        print(timeLog)
-
     def log_progress(self):
         # Log based on the interval
         currentTime = time.perf_counter()
         if currentTime - self.lastStatusUpdateTime > self.statusFrequencySeconds:
             self.lastStatusUpdateTime = currentTime
-            print(f'{self.search_request.name}: Matches Found: {self.result_count}, Pages Processed: {self.search_queue.deque_count}, Queue Size: {self.search_queue.size()}, Active Worker Threads: {self.active_worker_count()}')
-    
+            elapsedSeconds = currentTime - self.startTime                       
+            print(f'[{time_util.format_stopwatch(elapsedSeconds)}]: {self.search_request.name}: Matches Found: {self.result_count}, Pages Processed: {self.search_queue.deque_count}, Queue Size: {self.search_queue.size()}, Active Worker Threads: {self.active_worker_count()}')
+
+
 
     def start_workers(self):
         for i in range(0, self.workerCount):

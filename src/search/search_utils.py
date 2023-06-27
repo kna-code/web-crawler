@@ -48,14 +48,14 @@ class SearchUtils():
         links = []
         linkRegExPattern = re.compile('href="(\S*)"')        
         for link_url in re.findall(linkRegExPattern, contents):
-            link_url = link_url.lower()
+            link_lower = link_url.lower()
 
             # Handle special caseses
-            if link_url.startswith("mailto"):
+            if link_lower.startswith("mailto"):
                 break 
-            elif link_url.startswith("file"):
+            elif link_lower.startswith("file"):
                 break 
-            elif not link_url.startswith("http"):
+            elif not link_lower.startswith("http"):
                 link_url = urljoin(url, link_url)
             
             links.append(link_url)

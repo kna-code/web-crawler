@@ -82,10 +82,18 @@ class WebCrawlerWorker:
 
             # Handle any links
             links = SearchUtils.search_links(self.search_request, url, str_contents)
-            logging.info(f'WebCrawlerWorker[{self.id}]: Processing {url}, # Links={len(links)}')
             for link in links:
-                logging.debug(f'WebCrawlerWorker[{self.id}]: Processing {url}, Link={link}')
-                self.search_queue.enqueue(link)   
+
+                # Check the domain
+                link_lower = link.lower()
+                domain_match = 'none'                
+                for domain in self.search_request.domains:
+                    if(domain in link_lower):
+                        domain_match = domain
+                        self.search_queue.enqueue(link)   
+                        break
+
+                logging.debug(f'WebCrawlerWorker[{self.id}]: Processing {url}, Link={link}, DomainMatch={domain_match}')
 
         except Exception as Argument:
             logging.exception(f'WebCrawlerWorker[{self.id}]: Processing {url}, Exception{Argument}')
