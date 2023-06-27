@@ -1,13 +1,13 @@
 # To run all tests: 
-# > python3 -m unittest search_utils_test.py 
+# > python3 -m unittest tests.search.test_search_utils 
 #
 # To run a single test:
-# python3 -m unittest src/search_utils_test.py SearchUtilsTests.test_search_links
+# > python3 -m unittest tests.search.test_search_utils.SearchUtilsTests.test_parse_keyword_found 
 
 import unittest
-from .search_request import SearchRequest 
-from .search_result import SearchResult
-from .search_utils import SearchUtils
+from src.search.search_request import SearchRequest 
+from src.search.search_result import SearchResult
+from src.search.search_utils import SearchUtils
 import httplib2
 
 class SearchUtilsTests(unittest.TestCase):

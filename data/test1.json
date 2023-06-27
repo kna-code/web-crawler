@@ -1,0 +1,10 @@
+{
+    "search_requests": [
+        {
+            "name": "Emory University Faculty",
+            "start_url": "https://sph.emory.edu/faculty/?dept=gh",
+            "domains": ["sph.emory.edu"],
+            "keywords": ["abortion"]
+        }
+    ]
+}

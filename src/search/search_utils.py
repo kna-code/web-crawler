@@ -2,6 +2,7 @@ from .search_request import SearchRequest
 from .search_result import SearchResult
 from .search_result import SearchResultExcerpt
 import re
+from urllib.parse import urljoin
 
 class SearchUtils():
     @staticmethod
@@ -44,31 +45,20 @@ class SearchUtils():
     @staticmethod
     def search_links(search_request: SearchRequest, url: str, contents: str):     
 
-        # for relative links we need to pre-pend the source url's path
-        root_url = url
-        argsIdx = root_url.find("?")
-        if argsIdx > 0:
-            root_url = root_url[:argsIdx]
-
-        if root_url[1] != "/":
-            root_url = root_url + "/"
-
         links = []
         linkRegExPattern = re.compile('href="(\S*)"')        
         for link_url in re.findall(linkRegExPattern, contents):
             link_url = link_url.lower()
 
-            if link_url.startswith("http"):                
-                # Check the domain
-                for domain in search_request.domains:                
-                    match = re.search(domain, link_url)
-                    if match:
-                        links.append(link_url)
-            else:
-                # Handle relative link
-                link_url = f'{root_url}{link_url}'
-                links.append(link_url)
-          
+            # Handle special caseses
+            if link_url.startswith("mailto"):
+                break 
+            elif link_url.startswith("file"):
+                break 
+            elif not link_url.startswith("http"):
+                link_url = urljoin(url, link_url)
+            
+            links.append(link_url)
                 
         return links
         

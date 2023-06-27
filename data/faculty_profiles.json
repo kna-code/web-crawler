@@ -1,0 +1,17 @@
+{
+    "search_requests": [
+        {
+            "name": "Boston University Faculty",
+            "start_url": "https://www.bu.edu/sph/about/directory/",
+            "domains": ["www.bu.edu/sph"],
+            "keywords": ["abortion"]
+        },
+        {
+            "name": "Emory University Faculty",
+            "start_url": "https://sph.emory.edu/faculty/?dept=gh",
+            "domains": ["sph.emory.edu"],
+            "keywords": ["abortion"]
+        }
+    ]
+
+}
