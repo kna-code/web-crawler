@@ -76,7 +76,7 @@ class WebCrawler:
         currentTime = time.perf_counter()
         if currentTime - self.lastStatusUpdateTime > self.statusFrequencySeconds:
             self.lastStatusUpdateTime = currentTime
-            print(f'{self.search_request.name}: Matches Found: {self.result_count}, Queue Size: {self.search_queue.size()}, Active Worker Threads: {self.active_worker_count()}')
+            print(f'{self.search_request.name}: Matches Found: {self.result_count}, Pages Processed: {self.search_queue.deque_count}, Queue Size: {self.search_queue.size()}, Active Worker Threads: {self.active_worker_count()}')
     
 
     def start_workers(self):
