@@ -13,7 +13,6 @@ class SearchRequest:
     excerpt_length = 100
     
     debug_output_enabled = False
-    debug_output_dir: str
 
     def __init__(self, name: str, domains: List[str], start_url: str, keywords: List[str]):
         self.name = name
