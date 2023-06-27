@@ -81,11 +81,12 @@ class WebCrawlerWorker:
                 self.result_queue.enqueue(result)
 
             # Handle any links
-            links = SearchUtils.search_links(self.search_request, str_contents)
+            links = SearchUtils.search_links(self.search_request, url, str_contents)
             logging.info(f'WebCrawlerWorker[{self.id}]: Processing {url}, # Links={len(links)}')
             for link in links:
                 logging.debug(f'WebCrawlerWorker[{self.id}]: Processing {url}, Link={link}')
                 self.search_queue.enqueue(link)   
+
         except Exception as Argument:
             logging.exception(f'WebCrawlerWorker[{self.id}]: Processing {url}, Exception{Argument}')
    
